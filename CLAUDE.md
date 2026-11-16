@@ -67,7 +67,7 @@ docs/test_plan.md                 hands-on test checklist for the hardware
 - After editing `webui/`: run `node tools/ui_test.js`, then rebuild (build.ps1 regenerates the header). Commit the regenerated `webui_assets.h`.
 
 ## Git
-- Work happens on branch `dev`, one commit per completed step (only after it compiles / tests pass). `main` holds the reviewed state.
+- Commit directly to `main`, one commit per completed step (only after it compiles / tests pass). Remote: `origin` (GitHub).
 
 ## Build order (status 2026-11-16)
 0. Repo + toolchain, `01_chipinfo` — done, flashed (found N8R2).
