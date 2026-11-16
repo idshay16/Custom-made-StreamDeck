@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StreamDeck</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header>
+  <h1>StreamDeck</h1>
+  <div class="chips">
+    <span class="chip" id="chip-usb">USB</span>
+    <span class="chip" id="chip-wifi">Wi-Fi</span>
+    <span class="chip" id="chip-obs">OBS</span>
+    <span class="chip" id="chip-display">Display</span>
+    <span class="chip" id="chip-live">offline</span>
+  </div>
+  <nav>
+    <button data-tab="keys" class="active">Keys</button>
+    <button data-tab="settings">Settings</button>
+    <button data-tab="log">Log</button>
+  </nav>
+</header>
+
+<main>
+  <div id="banners"></div>
+
+  <section id="tab-keys">
+    <div class="layout">
+      <div class="panel">
+        <div class="pages" id="pages"></div>
+        <div class="grid" id="grid"></div>
+        <div class="row" style="margin-top:10px">
+          <button class="shrink" id="page-add">+ Page</button>
+          <button class="shrink" id="page-rename">Rename</button>
+          <button class="shrink" id="page-left">◀</button>
+          <button class="shrink" id="page-right">▶</button>
+          <button class="shrink danger" id="page-del">Delete page</button>
+          <span></span>
+        </div>
+        <label>Typing mode (launch / url / text)</label>
+        <select id="typing">
+          <option value="altcode">Alt codes: works with any keyboard layout (Hebrew etc.), slower</option>
+          <option value="direct">Direct: fast, needs the US English layout active</option>
+        </select>
+        <div class="savebar">
+          <span class="msg" id="save-msg">Loaded</span>
+          <button id="btn-json">Edit JSON</button>
+          <button id="btn-revert">Revert</button>
+          <button class="primary" id="btn-save" disabled>Save to deck</button>
+        </div>
+      </div>
+      <div class="panel" id="editor"><p class="hint">Click a key to edit it.</p></div>
+    </div>
+  </section>
+
+  <section id="tab-settings" hidden>
+    <div class="layout">
+      <div class="panel">
+        <h2>Wi-Fi</h2>
+        <label>Network name (SSID)</label><input id="s-ssid" autocomplete="off">
+        <label>Password <span id="s-ssid-has"></span></label><input id="s-wifipass" type="password" placeholder="unchanged" autocomplete="new-password">
+        <label>Hostname (http://NAME.local)</label><input id="s-host">
+        <h2 style="margin-top:16px">Web UI password</h2>
+        <p class="hint">User name: <b>admin</b>. Required for firmware updates.</p>
+        <label>New password <span id="s-web-has"></span></label><input id="s-webpass" type="password" placeholder="unchanged" autocomplete="new-password">
+        <h2 style="margin-top:16px">OBS (Tools → WebSocket Server Settings)</h2>
+        <div class="row">
+          <div><label>PC IP address</label><input id="s-obshost" placeholder="192.168.1.20 (empty = off)"></div>
+          <div class="shrink" style="width:90px"><label>Port</label><input id="s-obsport" type="number"></div>
+        </div>
+        <label>Password <span id="s-obs-has"></span></label><input id="s-obspass" type="password" placeholder="unchanged" autocomplete="new-password">
+        <h2 style="margin-top:16px">Clock + knob</h2>
+        <label>Time zone (POSIX TZ string)</label><input id="s-tz">
+        <div class="row" style="margin-top:8px">
+          <label class="shrink"><input type="checkbox" id="s-pot"> Knob controls brightness</label>
+          <label class="shrink"><input type="checkbox" id="s-potinv"> Reverse knob</label>
+        </div>
+        <label>Brightness when the knob is off (0–255)</label><input id="s-bright" type="number" min="0" max="255">
+        <div class="savebar"><span class="msg" id="s-msg"></span><button class="primary" id="s-save">Save settings</button></div>
+      </div>
+      <div>
+        <div class="panel">
+          <h2>Govee lights (LAN)</h2>
+          <p class="hint">Turn on “LAN Control” for the light in the Govee Home app.</p>
+          <div id="govee-list" class="hint">No devices yet.</div>
+          <button id="govee-scan" style="margin-top:8px">Scan network</button>
+        </div>
+        <div class="panel" style="margin-top:16px">
+          <h2>Firmware update</h2>
+          <p class="hint">Upload <code>streamdeck.ino.bin</code>. If the new firmware fails to start, the deck rolls back by itself.</p>
+          <input type="file" id="ota-file" accept=".bin">
+          <progress id="ota-prog" value="0" max="100" hidden></progress>
+          <div class="savebar"><span class="msg" id="ota-msg"></span><button id="ota-go">Upload</button></div>
+        </div>
+        <div class="panel" style="margin-top:16px">
+          <h2>Device</h2>
+          <div id="dev-info" class="hint"></div>
+          <div class="savebar"><span class="msg"></span><button class="danger" id="reboot">Reboot</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-log" hidden>
+    <div class="panel">
+      <div class="savebar" style="margin:0 0 8px"><span class="msg">Recent device log</span><button id="log-refresh">Refresh</button></div>
+      <pre class="log" id="log"></pre>
+    </div>
+  </section>
+</main>
+
+<dialog id="json-dlg">
+  <h2 style="margin-top:0">Config JSON</h2>
+  <textarea id="json-text" spellcheck="false"></textarea>
+  <div class="savebar"><span class="msg" id="json-msg"></span>
+    <button id="json-cancel">Cancel</button><button class="primary" id="json-apply">Apply to editor</button></div>
+</dialog>
+
+<div class="toast" id="toast"></div>
+<datalist id="state-names"></datalist>
+<script src="/app.js"></script>
+</body>
+</html>

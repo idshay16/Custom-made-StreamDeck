@@ -44,6 +44,7 @@ if (-not $Cli) {
 if ($ListPorts) { & $Cli board list; exit $LASTEXITCODE }
 if (-not $Sketch) { throw 'Pass a sketch folder, e.g. firmware\bringup\01_chipinfo' }
 $SketchPath = (Resolve-Path $Sketch).Path
+if ((Split-Path -Leaf $SketchPath) -eq 'streamdeck') { & (Join-Path $PSScriptRoot 'embed_webui.ps1') }
 
 $Partition  = if (Test-Path (Join-Path $SketchPath 'partitions.csv')) { 'custom' } else { 'default_8MB' }
 $UploadMode = if ($Usb) { 'cdc' } else { 'default' }
