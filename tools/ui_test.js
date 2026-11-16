@@ -11,8 +11,14 @@ const path = require('path');
 
 const PORT = 8098;
 const DEVTOOLS = 9300 + Math.floor(Math.random() * 500);   // fresh port: never attach to a stale browser
-// Killing the launcher leaves Edge's child processes alive; take down the tree.
-const killTree = (p) => { try { spawn('taskkill', ['/PID', String(p.pid), '/T', '/F'], { stdio: 'ignore' }); } catch (_) { p.kill(); } };
+// Edge's launcher exits and orphans its children, so killing by PID misses
+// them. Kill every process whose command line uses this run's temp profile,
+// synchronously, before the test exits.
+const { spawnSync } = require('child_process');
+const killByProfile = (prof) => spawnSync('powershell', ['-NoProfile', '-Command',
+  `Get-CimInstance Win32_Process -Filter "Name='msedge.exe' OR Name='chrome.exe'" | ` +
+  `Where-Object { $_.CommandLine -like '*${path.basename(prof)}*' } | ` +
+  `ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`], { stdio: 'ignore' });
 const BROWSERS = [
   'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
   'C:/Program Files/Microsoft/Edge/Application/msedge.exe',
@@ -22,11 +28,12 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let failures = 0;
 const check = (name, ok, extra = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${extra ? '  ' + extra : ''}`); if (!ok) failures++; };
 
+let prof = null;
 async function main() {
   const mock = spawn(process.execPath, [path.join(__dirname, 'mock_deck.js'), String(PORT)], { stdio: 'ignore' });
   const exe = BROWSERS.find((b) => fs.existsSync(b));
   if (!exe) throw new Error('no Edge/Chrome found');
-  const prof = fs.mkdtempSync(path.join(os.tmpdir(), 'deck-ui-'));
+  prof = fs.mkdtempSync(path.join(os.tmpdir(), 'deck-ui-'));
   const br = spawn(exe, ['--headless=new', '--disable-gpu', '--no-first-run', `--user-data-dir=${prof}`,
     `--remote-debugging-port=${DEVTOOLS}`, 'about:blank'], { stdio: 'ignore' });
   try {
@@ -114,8 +121,9 @@ async function main() {
     check('no JS errors', errors.length === 0, errors.join(' | '));
     ws.close();
   } finally {
-    killTree(br);
-    killTree(mock);
+    br.kill();
+    if (prof) killByProfile(prof);
+    mock.kill();
   }
   console.log(failures ? `\n${failures} FAILED` : '\nall passed');
   process.exit(failures ? 1 : 0);
