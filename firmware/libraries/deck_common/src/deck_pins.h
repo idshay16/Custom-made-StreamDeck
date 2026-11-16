@@ -80,6 +80,12 @@ constexpr int KEY_PINS[NUM_KEYS] = {
   41, 42, 47, 48,   // K9..K12  bottom row
 };
 
+// --- LED chain order --------------------------------------------------------
+// LED_INDEX[k] = position in the WS2812 chain of the LED under key K(k+1).
+// Default assumes the string runs K1->K12 row by row. If you lay it as a
+// snake (K1..K4, then K8..K5, then K9..K12) use {0,1,2,3, 7,6,5,4, 8,9,10,11}.
+constexpr int LED_INDEX[NUM_KEYS] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+
 // ============================================================================
 //  compile-time checks
 // ============================================================================
