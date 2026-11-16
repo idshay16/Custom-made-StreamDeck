@@ -39,7 +39,7 @@ Full plan: `C:\Users\test\.claude\plans\this-is-the-folder-wise-crown.md`.
 - IDE Tools menu must match: USB Mode = USB-OTG (TinyUSB), USB CDC On Boot = Enabled, Flash Size = 8MB, PSRAM = QSPI PSRAM, Partition = 8M with spiffs (3MB APP/1.5MB SPIFFS) or Custom.
 - `deck_common` reaches the IDE through a junction: `Documents\Arduino\libraries\deck_common` → `firmware\libraries\deck_common`.
   Recreate: `New-Item -ItemType Junction -Path "$env:USERPROFILE\Documents\Arduino\libraries\deck_common" -Target "<repo>\firmware\libraries\deck_common"`
-- Libraries: LovyanGFX 1.3.0, ArduinoJson 7.4.3, Adafruit_NeoPixel 1.15.5. Still to install (M6/M7): ESP32Async ESPAsyncWebServer + AsyncTCP, links2004 WebSockets.
+- Libraries: LovyanGFX 1.3.0, ArduinoJson 7.4.3, Adafruit_NeoPixel 1.15.5, **ESP Async WebServer 3.12.1** + **Async TCP 3.5.0** (ESP32Async), **WebSockets 2.7.2** (links2004). Installed pinned with `--no-deps`; don't let the library manager bump Async TCP past 3.5.0 without rebuilding and testing.
 - **Never include Adafruit_TinyUSB in these sketches**: the ESP32 core ships its own TinyUSB (`USB.h`, `USBHIDKeyboard`, ...). The user library is for the KVM.
 
 ```powershell
@@ -52,24 +52,30 @@ Full plan: `C:\Users\test\.claude\plans\this-is-the-folder-wise-crown.md`.
 
 ## Layout
 ```
-firmware/libraries/deck_common/   deck_pins.h, deck_config.h, (later) display driver, shared helpers
-firmware/bringup/NN_name/         one small test sketch per step
-firmware/streamdeck/              main firmware + partitions.csv (from M5)
-webui/                            web UI source (vanilla HTML/JS/CSS) → LittleFS /www
-scripts/build.ps1                 arduino-cli wrapper
-scripts/build_fs.ps1              (later) pack webui → LittleFS image → upload
+firmware/libraries/deck_common/   deck_pins.h, deck_config.h, deck_display.h (RA8875 480x272 LovyanGFX driver)
+firmware/bringup/NN_name/         one small test sketch per step (01-04)
+firmware/streamdeck/              main firmware: app.h (module map), one .cpp per module, partitions.csv,
+                                  default_config.h (config schema + default), webui_assets.h (GENERATED)
+webui/                            web UI source (vanilla HTML/JS/CSS), embedded gzipped into the firmware
+scripts/build.ps1                 arduino-cli wrapper (runs embed_webui.ps1 for firmware\streamdeck)
+scripts/embed_webui.ps1           webui/ → firmware/streamdeck/webui_assets.h
+tools/mock_deck.js                fake deck API for UI work without hardware: node tools/mock_deck.js → localhost:8080
+tools/ui_test.js                  end-to-end UI test in headless Edge: node tools/ui_test.js
+docs/test_plan.md                 hands-on test checklist for the hardware
 ```
+- Web UI is embedded in the firmware (not a LittleFS image), so OTA updates firmware + UI together. LittleFS holds only `/config.json` and `/icons/*.png`.
+- After editing `webui/`: run `node tools/ui_test.js`, then rebuild (build.ps1 regenerates the header). Commit the regenerated `webui_assets.h`.
 
-## Build order
-0. Repo + toolchain, `01_chipinfo` (flash/PSRAM, on-board LED pin).
-1. `02_usb_hid`: HID keyboard + consumer + CDC; check Win+R typing under each keyboard layout I use.
-2. `03_keys_leds`: 12 keys, WS2812 chain + current cap, pot → brightness.
-3. `04_display`: LT043C interface jumpers + pinout, 480×272 panel, test pattern, fill-rate benchmark, backlight.
-4. Config + tile UI: partitions, LittleFS, config.json, PNG icons.
-5. Action engine (main firmware starts).
-6. Wi-Fi + web UI + OTA.
-7. OBS. 8. Govee. 9. Discord.
-10. Soak, power measurement, final assembly.
+## Git
+- Work happens on branch `dev`, one commit per completed step (only after it compiles / tests pass). `main` holds the reviewed state.
+
+## Build order (status 2026-11-16)
+0. Repo + toolchain, `01_chipinfo` — done, flashed (found N8R2).
+1. `02_usb_hid` — done, flashed, enumerates as keyboard + consumer + CDC. Keyboard-layout test still open.
+2. `03_keys_leds` — written, compiles; needs wiring.
+3. `04_display` — written, compiles; needs wiring + interface-jumper check.
+4–9. Main firmware v0.1.0 (config, tiles, actions, Wi-Fi, web UI, OTA, OBS, Govee, Discord binds) — written, compiles, web UI passes `tools/ui_test.js` against the mock. **Not yet flashed** (board was unplugged). See docs/test_plan.md.
+10. Soak, power measurement, final assembly — after enclosure arrives.
 
 ## Working style
 - Build incrementally, one subsystem per step, each with a small test sketch I can flash and check.
