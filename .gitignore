@@ -1,0 +1,8 @@
+build_guide.html
+build/
+*.bin
+*.elf
+*.map
+__pycache__/
+.vscode/
+.claude/settings.local.json
