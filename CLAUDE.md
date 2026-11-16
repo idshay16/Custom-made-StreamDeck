@@ -5,7 +5,7 @@ Hobby embedded project. I build the hardware and write the firmware myself as a 
 Status (2026-11-16): parts mostly in hand, 3D-printed enclosure ordered → all bring-up happens on the open breadboard. MX switches can't sit in a breadboard; use the 6×6 tact switches as stand-ins until the lid exists.
 
 ## Hardware
-- **ESP32-S3 DevKitC-1 clone, N8R2** — NOT the N16R8 the guide lists. esptool: ESP32-S3 (QFN56) rev v0.2, embedded 2 MB quad PSRAM, 8 MB GigaDevice flash (`c8 4017`), MAC `b0:81:84:80:5f:94`. Ports labelled "COM" (CH343 USB-serial → UART0, flashing) and "USB" (native → PC through the USB-C panel mount: HID + CDC console). Quad PSRAM leaves GPIO35–37 free. Spare board: not yet identified — target the smaller of the two so either works.
+- **ESP32-S3 DevKitC-1 clone, N8R2** — NOT the N16R8 the guide lists. esptool: ESP32-S3 (QFN56) rev v0.2, embedded 2 MB quad PSRAM, 8 MB GigaDevice flash (`c8 4017`), MAC `b0:81:84:80:5f:94`. Ports labelled "COM" (CH343 USB-serial → UART0, flashing) and "USB" (native → PC through the USB-C panel mount: HID + CDC console). Quad PSRAM leaves GPIO35–37 free. **No spare board**: the guide's "build + spare" pair was not bought, so double-check power wiring before plugging in.
 - **4.3" TFT 480×272, RA8875**, 8080 8-bit parallel (LT043C, 3.3 V, no touch).
 - **12 keys**, one GPIO each, INPUT_PULLUP, no matrix. Layout 3 rows × 4, K1 top-left, row-major.
 - **12 WS2812B** under translucent keycaps (10 in hand). USB-powered → hard current cap.
