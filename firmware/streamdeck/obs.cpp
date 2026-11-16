@@ -18,7 +18,7 @@ static QueueHandle_t req_q() {   // char* request JSON, malloc'd; thread-safe la
   return q;
 }
 static std::atomic<bool> g_reconf{true};
-static bool g_begun = false, g_identified = false;
+static bool g_begun = false, g_identified = false, g_socket_up = false;
 static uint32_t g_req_id = 0;
 static ConfigPtr g_seen_cfg;
 
@@ -117,9 +117,12 @@ static void on_ws(WStype_t type, uint8_t *payload, size_t len) {
   switch (type) {
     case WStype_CONNECTED:
       LOG("obs: socket connected");
+      g_socket_up = true;
       break;
     case WStype_DISCONNECTED:
       if (g_identified) LOG("obs: disconnected");
+      else if (g_socket_up) LOG("obs: closed during handshake: wrong OBS password? (Settings -> OBS)");
+      g_socket_up = false;
       g_identified = false;
       state::set("obs.connected", false);
       break;

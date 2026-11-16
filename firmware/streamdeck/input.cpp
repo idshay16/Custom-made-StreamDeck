@@ -54,15 +54,26 @@ static void input_task(void *) {
       }
     }
 
+    // Pot settings change rarely; refresh the cached copy twice a second
+    // instead of copying the whole Settings struct (heap strings) at 50 Hz.
+    static bool pot_on = true, pot_inv = false;
+    static uint8_t fixed = 160;
+    static uint32_t last_settings = 0;
+    if (now - last_settings >= 500 || last_settings == 0) {
+      last_settings = now;
+      Settings s = settings::get();
+      pot_on = s.pot_enabled;
+      pot_inv = s.pot_invert;
+      fixed = s.fixed_brightness;
+    }
     if (now - last_pot >= 20) {
       last_pot = now;
-      Settings s = settings::get();
-      if (s.pot_enabled) {
+      if (pot_on) {
         uint32_t mv = 0;
         for (int i = 0; i < 8; i++) mv += analogReadMilliVolts(deck::POT_WIPER);
         mv /= 8;
         float v = constrain(mv / 3100.0f, 0.0f, 1.0f);   // ADC tops out a bit below 3.3 V
-        if (s.pot_invert) v = 1.0f - v;
+        if (pot_inv) v = 1.0f - v;
         ema = ema < 0 ? v : ema + 0.25f * (v - ema);
         int b = (int)(ema * 255.0f + 0.5f);
         if (out < 0 || abs(b - out) >= 3 || (b == 0 && out != 0) || (b == 255 && out != 255)) {
@@ -71,7 +82,7 @@ static void input_task(void *) {
         }
       } else {
         out = -1;
-        state::set_brightness(s.fixed_brightness);
+        state::set_brightness(fixed);
       }
     }
     vTaskDelayUntil(&wake, 1);
