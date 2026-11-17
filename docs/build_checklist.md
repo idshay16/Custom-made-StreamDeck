@@ -25,11 +25,13 @@ Tick what's in hand; anything unticked goes on the next order (we review this to
 | 10k potentiometer | 1 | check arrived |
 | WS2812B pre-wired nodes | 12 | have 10 → order 2 more (or another 10-string) |
 | Breadboard 400-point | 1 | ✅ have (2 bought; one is for the KVM) |
-| Dupont female-female | ~24 | ✅ have (10 cm). Fine for keys; display wants 20 cm |
-| Dupont **male-female 20 cm** | ~15 | ❌ order |
-| Dupont **male-male 20 cm** | ~8 | ❌ order |
-| Solid-core wire 24 AWG (roll) | 1 | ❌ order: key GND bus (+ key wiring if option B) |
-| Heat-shrink assortment | 1 | ❌ order: insulates key-pin connections |
+| Dupont female-female 10 cm | — | ✅ have. Use for testing; too short to cut for keys |
+| Dupont **female-female 20 cm**, 40 pcs | 1 pack | ❌ order: 6 cut in half = 12 key wires; rest for the display |
+| Dupont **male-female 20 cm**, 40 pcs | 1 pack | ❌ order: ESP32 → breadboard rails, display power pins |
+| Dupont **male-male 20 cm**, 40 pcs | 1 pack | ❌ order: rail jumpers, pot |
+| Solid-core hookup wire 22–24 AWG, a few meters | 1 | ❌ order: key GND bus (plugs straight into the breadboard) |
+| Heat-shrink assortment (must include 3 mm) | 1 | ❌ order: covers each wrapped key pin |
+| Wire stripper + flush cutter | 1 | order only if you don't own one |
 | 74AHCT125 (DIP) | 1 | optional: only if the LEDs flicker (3.3 V data into 5 V LEDs) |
 | USB-C panel-mount extension (round, screw) | 1 | check (guide: "still to buy") |
 | M3 × 8 countersunk screws | 4 | check (guide: "still to buy") |
@@ -145,13 +147,28 @@ Do these in order; each ends with a test.
 - [ ] Pot into the breadboard (legs in three different rows), wired per section 2.
 - [ ] **Before plugging in:** confirm nothing connects the left + (5V) rail to the right + (3V3) rail.
 
-### 3.3 Keys
-1. Pick the key-wiring method after testing one switch:
-   - **A:** slide the plastic sleeve off one end of a female-female wire, push the bare metal clip onto the switch pin, squeeze lightly if loose, cover with heat-shrink or tape.
-   - **B:** wrap stripped solid-core wire 3–4 turns around the pin, cover with heat-shrink.
-2. For each key: signal wire from switch pin 1 to its ESP32 GPIO.
-3. GND bus: one bare solid-core wire wrapped once around every switch's pin 2, ending in an ESP32 GND pin (or the GND rail).
-4. Before the lid exists you can test with switches loose on the desk.
+### 3.3 Keys (decided 2026-11-17: cut dupont + wrap + heat-shrink, no solder)
+
+Each MX switch has 2 pins. Pin 1 = signal (to its ESP32 GPIO), pin 2 = GND.
+
+**Signal wires (12):**
+1. Cut a 20 cm female-female dupont wire in the middle. Each half is one key wire with a female end. 6 wires → 12 key wires.
+2. Strip ~10 mm from the cut end and twist the strands tight.
+3. Slide a ~12 mm piece of 3 mm heat-shrink onto the wire **first**.
+4. Wrap the bare strands tightly around switch pin 1, 3–4 turns, starting at the switch body.
+5. Pull the heat-shrink over the pin and wrap, then shrink it (lighter held below it, moving, not touching; or a heat gun).
+6. Tug test. Label the wire (K1…K12, tape flag) at the female end.
+7. Female end → that key's ESP32 GPIO (section 2).
+
+**GND bus (1 wire for all 12):**
+1. One length of solid-core wire that passes every switch's pin 2.
+2. At each switch, strip ~8 mm in the middle of the wire without cutting it (score the insulation twice with the stripper and slide it apart), wrap that bare spot one turn around pin 2.
+3. The bus can stay bare: touching another GND pin is harmless, and the signal pins are covered by heat-shrink.
+4. The bus end (solid core) plugs straight into the breadboard GND rail.
+
+Before the lid exists, do this with the switches loose on the desk and test with `03_keys_leds`. In the lid, the switches snap in from the top with the wires already on (do one first and check it still clips in).
+
+**Trial run tonight with parts you have:** cut one 10 cm female-female wire, strip the cut end, wrap it around a switch pin, hold it with tape. Repeat on the other pin. Put the female ends on ESP32 GPIO35 and GND, flash `streamdeck`, press the switch: the console prints `K1 down` and media play/pause toggles.
 
 ### 3.4 LEDs
 - [ ] Connect the 10-node string (section 2). Order the 2 extra; they chain on the end.
@@ -190,7 +207,7 @@ Order matters: wire switches before the lid is closed, and test on the bench fir
 
 ## 5. Open items (decided together)
 
-- [ ] Key-wiring method A vs B (test one switch).
+- [x] Key-wiring method: cut dupont + wrap + heat-shrink (section 3.3). Trial run on one switch still to do.
 - [ ] Do the switches have a light window? If not: LEDs become a glow strip instead of per-key backlight.
 - [ ] Display connector type + interface jumpers + supply voltage.
 - [ ] Hebrew-layout launch test result (test_plan.md §3).
